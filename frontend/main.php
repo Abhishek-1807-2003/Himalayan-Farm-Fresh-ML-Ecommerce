@@ -1,0 +1,1315 @@
+<?php include 'components/header.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+ ?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Himalayan Farm Fresh</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f8f8;
+        }
+        /* Custom styles for hero section background image */
+        .hero-bg {
+            background-image: url('https://placehold.co/1920x600/a8e0a8/2e7d32?text=Fresh+Produce+from+Himalayas'); /* Placeholder image for hero */
+            background-size: cover;
+            background-position: center;
+        }
+        /* Custom styles for product card image height */
+        .product-card-img {
+            height: 200px; /* Fixed height for product images in grid */
+            object-fit: cover;
+        }
+        /* Product detail image container styling */
+        .product-detail-img-container {
+            height: 550px; /* Increased height for the container to make image taller */
+            background-color: #fdfdfd; /* Light background for detail image area */
+            border-radius: 0.5rem; /* rounded-lg */
+            overflow: hidden; /* Ensures image doesn't overflow rounded corners */
+        }
+        /* Product detail image styling */
+        .product-detail-img {
+            width: 100%; /* Make image fill container width */
+            height: 100%; /* Make image fill container height */
+            object-fit: cover; /* This is the key change: makes the image cover the entire entire area */
+        }
+        .hidden {
+            display: none;
+        }
+        /* Styles for the notification message */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #2e7d32;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .notification.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm py-4">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+         <!-- Logo + User Info -->
+<div class="flex items-center gap-3">
+    <!-- Logo -->
+    <a href="index.php" class="text-2xl font-bold text-green-700 rounded-lg p-2">
+        🌿 Himalayan Farm Fresh
+    </a>
+
+    <!-- User info (only if logged in) -->
+    <?php if (!empty($_SESSION['user_logged_in']) && !empty($_SESSION['first_name'])): ?>
+        <div class="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full">
+            <!-- User icon -->
+            <i class="fas fa-user-circle text-green-700 text-xl"></i>
+            <!-- Username -->
+            <span class="hidden sm:inline text-green-700 font-semibold">
+                Hi, <?= htmlspecialchars($_SESSION['first_name']) ?>
+            </span>
+        </div>
+    <?php endif; ?>
+</div>
+
+
+            <!-- Navigation -->
+            <nav class="hidden md:flex space-x-6">
+                <a href="./home.php" class="text-gray-700 hover:text-green-600 font-medium transition-colors duration-300">Home</a>
+                <a href="./main.php" class="text-gray-700 hover:text-green-600 font-medium transition-colors duration-300">Shop</a>
+                <a href="./about_us.php" class="text-gray-700 hover:text-green-600 font-medium transition-colors duration-300">About Us</a>
+                <a href="#" class="text-gray-700 hover:text-green-600 font-medium transition-colors duration-300">Contact</a>
+            </nav>
+
+            <!-- Icons (Cart, Account) -->
+            <div class="flex items-center space-x-4">
+                <a href="#" id="cart-icon-link" class="text-gray-700 hover:text-green-600 text-xl transition-colors duration-300 relative">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                </a>
+                <a href="#" class="text-gray-700 hover:text-green-600 text-xl transition-colors duration-300">
+                    <i class="fas fa-user-circle"></i>
+                </a>
+                <!-- Mobile Menu Button -->
+                <button class="md:hidden text-gray-700 hover:text-green-600 text-xl focus:outline-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero-section" class="hero-bg py-20 md:py-32 text-white text-center rounded-b-lg shadow-md mx-4 mt-4">
+        <div class="container mx-auto px-4">
+          
+           
+            </button>
+        </div>
+    </section>
+
+    <!-- Product Categories/Filter Section (Main Grid) -->
+    <section id="product-grid-section" class="py-12 bg-white mx-4 mt-8 rounded-lg shadow-md">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-green-700 mb-8">Our Products</h2>
+            <div class="flex flex-wrap justify-center gap-3 mb-8" id="category-buttons">
+                <button class="filter-btn bg-green-600 text-white px-6 py-2 rounded-full font-semibold shadow-md hover:bg-green-700 transition-colors duration-300" data-filter="all">All</button>
+                <button class="filter-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full font-semibold shadow-md hover:bg-green-100 hover:text-green-700 transition-colors duration-300" data-filter="fruits">Fruits</button>
+                <button class="filter-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full font-semibold shadow-md hover:bg-green-100 hover:text-green-700 transition-colors duration-300" data-filter="vegetables">Vegetables</button>
+                <button class="filter-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full font-semibold shadow-md hover:bg-green-100 hover:text-green-700 transition-colors duration-300" data-filter="dairy">Dairy</button>
+                <button class="filter-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full font-semibold shadow-md hover:bg-green-100 hover:text-green-700 transition-colors duration-300" data-filter="herbs">Herbs</button>
+                <button class="filter-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full font-semibold shadow-md hover:bg-green-100 hover:text-green-700 transition-colors duration-300" data-filter="handmade">Handmade</button>
+                <button class="filter-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full font-semibold shadow-md hover:bg-green-100 hover:text-green-700 transition-colors duration-300" data-filter="local-produce">Local Produce</button>
+                <button class="filter-btn bg-gray-200 text-gray-700 px-6 py-2 rounded-full font-semibold shadow-md hover:bg-green-100 hover:text-green-700 transition-colors duration-300" data-filter="wellness">Wellness</button>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="product-list">
+                <!-- Fruits -->
+                <div class="product-card product fruits bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="apple-himalayan"
+                     data-name="Himalayan Apples"
+                     data-price="120"
+                     data-unit="kg"
+                     data-img="https://bsmedia.business-standard.com/_media/bs/img/article/2024-09/24/full/20240924164043.jpg"
+                     data-description="Fresh and juicy apples from Himachal orchards, picked at peak ripeness. Known for their crisp texture and sweet-tart flavor, perfect for eating fresh or in pies.">
+                    <img src="https://thumbs.dreamstime.com/b/mountain-dew-fresh-juicy-red-apples-india-12127404.jpg" alt="Himalayan Apples" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Himalayan Apples</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Fresh and juicy apples from Himachal orchards.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹120/kg</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product fruits bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="kiwi-uttarakhand"
+                     data-name="Kiwi"
+                     data-price="180"
+                     data-unit="kg"
+                     data-img="https://cdn-prod.medicalnewstoday.com/content/images/articles/271/271232/chopped-kiwi-in-a-bowl-on-a-table.jpg"
+                     data-description="Tart and sweet kiwis from Uttarakhand farms, packed with Vitamin C. These fuzzy fruits are a delightful addition to smoothies and fruit salads.">
+                    <img src="https://www.health.com/thmb/v0b1-O1_M5D60QgSf1c8CaPradA=/2163x0/filters:no_upscale():max_bytes(150000):strip_icc()/Kiwi-a2e9888bfab6474f8d12d2ae0287b356.jpg" alt="Kiwi" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Kiwi</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Tart and sweet kiwis from Uttarakhand farms.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹180/kg</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product fruits bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="plum-himalayan"
+                     data-name="Himalayan Plums"
+                     data-price="140"
+                     data-unit="kg"
+                     data-img="https://chawlafruit.com/wp-content/uploads/2024/03/Plums-background.jpg"
+                     data-description="Sweet organic plums from the mountain valleys, perfect for snacking. These plums are juicy and have a vibrant color, indicating their freshness.">
+                    <img src="https://m.media-amazon.com/images/I/91FS9nT6g2L._UF1000,1000_QL80_.jpg" alt="Himalayan Plums" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Himalayan Plums</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Sweet organic plums from the mountain valleys.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹140/kg</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <!-- Vegetables -->
+                <div class="product-card product vegetables bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="broccoli-organic"
+                     data-name="Broccoli"
+                     data-price="90"
+                     data-unit="kg"
+                     data-img="https://media.istockphoto.com/id/934417194/photo/great-field-of-broccoli.jpg?s=612x612&w=0&k=20&c=xpUbebs5gWUwkb0N7i6IaOdLHoeFnkkoOtuWlDLVc9M="
+                     data-description="Organic broccoli, full of nutrients and grown with care. Excellent for stir-fries, steaming, or roasting.">
+                    <img src="https://hub.suttons.co.uk/wp-content/uploads/2021/06/harvested-broccoli-white-bowl.jpg" alt="Broccoli" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Broccoli</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Organic broccoli, full of nutrients and grown with care.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹90/kg</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product vegetables bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="radish-pahadi"
+                     data-name="Pahadi Radish"
+                     data-price="40"
+                     data-unit="kg"
+                     data-img="https://media.istockphoto.com/id/1283199449/photo/a-radish-counter-in-the-grocery-stores-vegetable-section.jpg?s=612x612&w=0&k=20&c=Mic81bun9c05_U0fflj8mGxe1uGwTZA_9awRMkKbzL0="
+                     data-description="Crisp & long white radishes, ideal for salads and fresh consumption. These radishes have a mild, peppery flavor.">
+                    <img src="https://img.clevup.in/325460/Raddish-1721711452377.jpeg?width=600&format=webp" alt="Pahadi Radish" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Pahadi Radish</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Crisp & long white radishes, ideal for salads.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹40/kg</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product vegetables bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="spinach-mountain"
+                     data-name="Mountain Spinach"
+                     data-price="30"
+                     data-unit="bunch"
+                     data-img="https://i0.wp.com/post.healthline.com/wp-content/uploads/2019/05/spinach-1296x728-header.jpg?w=1155&h=1528"
+                     data-description="Fresh leafy greens grown organically in the pristine mountain air. Perfect for healthy meals and smoothies.">
+                    <img src="https://cdn.britannica.com/30/82530-050-79911DD4/Spinach-leaves-vitamins-source-person.jpg" alt="Mountain Spinach" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Mountain Spinach</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Fresh leafy greens grown organically.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹30/bunch</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <!-- Dairy -->
+                <div class="product-card product dairy bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="milk-organic"
+                     data-name="Organic Cow Milk"
+                     data-price="50"
+                     data-unit="litre"
+                     data-img="https://lh3.googleusercontent.com/proxy/f6o6zClO00VkifFGzYaPpdIhjCr0eF2WSSUYQFl602CFfsdPvbjY6o4qrY0cBm39jz60Ka0iJmk8iqfK_gPFxMCjbJP0OLCsZyo"
+                     data-description="A2 milk from grass-fed Himalayan cows, pure and nutritious. Sourced from healthy, happy cows in the mountains.">
+                    <img src="https://www.branding.news/wp-content/uploads/2019/06/Unblackit.jpg" alt="Organic Cow Milk" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Organic Cow Milk</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">A2 milk from grass-fed Himalayan cows.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹50/litre</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product dairy bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="ghee-desi"
+                     data-name="Desi Ghee"
+                     data-price="500"
+                     data-unit="litre"
+                     data-img="../assets/img/WhatsApp Image 2025-08-06 at 15.48.36_092724ac.jpg"
+                     data-description="Hand-churned bilona ghee from mountain butter, rich in flavor and aroma. A traditional Indian superfood.">
+                    <img src="https://purewhites.in/cdn/shop/collections/Ghee_copy.webp?v=1712135384" alt="Desi Ghee" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Desi Ghee</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Hand-churned bilona ghee from mountain butter.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹500/litre</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                
+                <div class="product-card product fruits bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="bayberry"
+                     data-name="bayberry"
+                     data-price="20"
+                     data-unit="bunch"
+                     data-img="https://garhwalpost.in/wp-content/uploads/2022/03/IMG-20220312-WA0030.jpg"
+                     data-description="Kafal the tangy treasure of the hills, perfect for refreshing treats and natural vitality. Freshly picked and bursting with flavor.">
+                    <img src="https://images.news18.com/ibnkhabar/uploads/2020/05/KAFAL-2.jpg" alt="bayberry" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Bayberry(kafal)</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Kafal - memory of the mountains</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹20/bunch</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product herbs bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="lemongrass-fresh"
+                     data-name="Lemongrass"
+                     data-price="35"
+                     data-unit="bunch"
+                     data-img="https://smartyield.in/wp-content/uploads/2020/11/Lemon-Grass.jpg"
+                     data-description="Fragrant stalks for teas and cooking, adding a refreshing aroma. Known for its citrusy notes.">
+                    <img src="https://cdn.shopify.com/s/files/1/0858/1205/2304/files/Get_to_Know_Lemongrass1.jpg?v=1726610567" alt="Lemongrass" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Lemongrass</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Fragrant stalks for teas and cooking.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹35/bunch</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <!-- NEW HERBS PRODUCTS -->
+                <div class="product-card product herbs bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="wild-thyme"
+                     data-name="Wild Thyme"
+                     data-price="50"
+                     data-unit="pack"
+                     data-img="https://www.wildlifetrusts.org/sites/default/files/styles/spotlight_default/public/2018-03/wild_thyme-00022.jpg?h=ad1b958b&itok=pKyxymTv"
+                     data-description="Aromatic wild thyme, hand-picked from Himalayan slopes. Adds a distinctive flavor to dishes and teas.">
+                    <img src="https://www.nature-and-garden.com/wp-content/uploads/sites/4/2023/01/wild-thyme.jpg" alt="Wild Thyme" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Wild Thyme</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Hand-picked wild thyme.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹50/pack</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product herbs bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="brahmi-powder"
+                     data-name="Brahmi Powder"
+                     data-price="150"
+                     data-unit="pack"
+                     data-img="https://5.imimg.com/data5/SELLER/Default/2020/10/IY/MK/CM/29376458/brahmi-powder-500x500.jpg"
+                     data-description="Pure Brahmi powder, traditionally used for its cognitive and calming properties. Organically sourced.">
+                    <img src="https://5.imimg.com/data5/SELLER/Default/2023/4/302712994/VN/NN/JF/82090775/brahmi-powder.jpg" alt="Brahmi Powder" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Brahmi Powder</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Organic Brahmi powder.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹150/pack</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <!-- Handmade -->
+                <div class="product-card product handmade bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="herbal-soap"
+                     data-name="Herbal Soap"
+                     data-price="70"
+                     data-unit="bar"
+                     data-img="https://www.kingdomkreations.co.uk/wp-content/uploads/2023/06/handmade-soap-kingdom-keations.jpg"
+                     data-description="Goat milk + Tulsi handmade skincare soap, gentle and nourishing. Crafted with natural ingredients for healthy skin.">
+                    <img src="https://media.istockphoto.com/id/517495506/photo/bars-of-homemade-soaps-honey-or-oil-and-healing-herbs.jpg?s=612x612&w=0&k=20&c=bQPtsclGfpY5yIjyRDSSSRn4wAy94O1DFsQr2aoz0K4=" alt="Herbal Soap" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Herbal Soap</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Goat milk + Tulsi handmade skincare soap.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹70/bar</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product handmade bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="woolen-cap"
+                     data-name="Woolen Cap"
+                     data-price="250"
+                     data-unit="piece"
+                     data-img="https://5.imimg.com/data5/SELLER/Default/2025/1/483095973/UW/GI/CY/160664791/woolen-pahadi-topi-500x500.jpeg"
+                     data-description="Knitted from 100% Himalayan sheep wool, warm and cozy. Handcrafted by local artisans.">
+                    <img src="https://5.imimg.com/data5/SELLER/Default/2025/1/483095948/BC/TU/JH/160664791/woolen-pahadi-topi.jpeg" alt="Woolen Cap" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Woolen Cap</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Knitted from 100% Himalayan sheep wool.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹250</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <!-- NEW HANDMADE PRODUCTS -->
+                <div class="product-card product handmade bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="hand-knitted-shawl"
+                     data-name="Hand-Knitted Shawl"
+                     data-price="1200"
+                     data-unit="piece"
+                     data-img="https://5.imimg.com/data5/SELLER/Default/2022/7/PV/FJ/WP/63427333/kullu-woolen-shawls.jpeg"
+                     data-description="Luxurious hand-knitted shawl made from fine Himalayan wool. Soft, warm, and elegantly designed.">
+                    <img src="https://www.dsource.in/sites/default/files/styles/mini_responsivecustom_user_moblie_1x/public/resource/kullu-and-kinnauri-shawls/products/minigallery/3292/01.jpg?itok=L0myOYg8&timestamp=1437717579" alt="Hand-Knitted Shawl" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Hand-Knitted Shawl</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Luxurious shawl from Himalayan wool.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹1200</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product handmade bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="hand-woven-basket"
+                     data-name="Hand-Woven Basket"
+                     data-price="450"
+                     data-unit="piece"
+                     data-img="https://asamaenterprise.com/cdn/shop/products/wickerbasketbag2-_1-897621.jpg?v=1680537481"
+                     data-description="Artisan hand-woven basket from natural fibers. Perfect for storage or decor.">
+                    <img src="https://asamaenterprise.com/cdn/shop/products/wickerbasketbag2-_1-897621.jpg?v=1680537481" alt="Hand-Woven Basket" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Hand-Woven Basket</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Artisan hand-woven basket.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹450</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product handmade bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="clay-pottery"
+                     data-name="Clay Pottery"
+                     data-price="300"
+                     data-unit="piece"
+                     data-img="https://static.toiimg.com/photo/106594613.cms"
+                     data-description="Traditional handmade clay pottery. Ideal for kitchen use or decorative purposes.">
+                    <img src="https://static.toiimg.com/photo/106594613.cms" alt="Clay Pottery" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Clay Pottery</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Traditional handmade clay pottery.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹300</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product handmade bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="woolen-gloves"
+                     data-name="Woolen Gloves"
+                     data-price="180"
+                     data-unit="pair"
+                     data-img="https://i.ebayimg.com/images/g/ClwAAOSwG2JnB7IC/s-l1200.jpg"
+                     data-description="Warm and cozy woolen gloves, hand-knitted by local artisans. Perfect for cold Himalayan winters.">
+                    <img src="https://i.ebayimg.com/images/g/ClwAAOSwG2JnB7IC/s-l1200.jpg" alt="Woolen Gloves" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Woolen Gloves</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Hand-knitted woolen gloves.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹180/pair</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <!-- New Local Produce Products -->
+                <div class="product-card product local-produce bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="himalayan-honey"
+                     data-name="Himalayan Honey"
+                     data-price="350"
+                     data-unit="jar"
+                     data-img="https://rukminim2.flixcart.com/image/704/844/xif0q/honey/v/3/9/700-100-natural-pure-multifloral-raw-honey-himalayan-natives-original-imah8xxudmdxg9ju.jpeg?q=90&crop=false"
+                     data-description="Pure, raw honey collected from the pristine Himalayan forests. Rich in antioxidants and natural goodness.">
+                    <img src="https://5.imimg.com/data5/ANDROID/Default/2024/4/411842346/ZD/QK/WK/2552114/product-jpeg-500x500.jpg" alt="Himalayan Honey" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Himalayan Honey</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Pure, raw honey from Himalayan forests.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹350/jar</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product local-produce bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="pahadi-rajma"
+                     data-name="Pahadi Rajma"
+                     data-price="180"
+                     data-unit="kg"
+                     data-img="https://2blissofbaking.com/wp-content/uploads/2018/04/DSC_5203-1.jpg"
+                     data-description="Authentic Himalayan kidney beans, known for their rich flavor and creamy texture. A staple in mountain cuisine.">
+                    <img src="https://5.imimg.com/data5/ECOM/Default/2024/3/403993012/CD/EE/OS/28346191/81r3h4ncf6l-sl1500-6400x-2d58bdc5-1ddc-406d-a704-4ee4f8e6f9b8-250x250.jpg" alt="Pahadi Rajma" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Pahadi Rajma</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Authentic Himalayan kidney beans.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹180/kg</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <!-- MORE LOCAL PRODUCE PRODUCTS -->
+                <div class="product-card product local-produce bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="himalayan-garlic"
+                     data-name="Himalayan Garlic"
+                     data-price="220"
+                     data-unit="kg"
+                     data-img="https://5.imimg.com/data5/SELLER/Default/2022/10/MS/OG/GM/8920720/kashmiri-lahsun-snow-mountain-garlic.jpeg"
+                     data-description="Potent and flavorful garlic, grown in the high altitudes of the Himalayas. Known for its medicinal properties.">
+                    <img src="https://mypahadidukan.com/cdn/shop/products/kashmiri-himalayan-garlic-lehsun-with-single-clove-ek-kali-wild-valley-foods-garlic-my-pahadi-dukan-112051.jpg?v=1688712054&width=720" alt="Himalayan Garlic" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Himalayan Garlic</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Potent and flavorful garlic.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹220/kg</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product local-produce bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="organic-turmeric"
+                     data-name="Organic Turmeric"
+                     data-price="110"
+                     data-unit="kg"
+                     data-img="https://5.imimg.com/data5/SELLER/Default/2023/8/335800960/TS/XH/OJ/191457182/organic-turmeric-powder-500x500.jpeg"
+                     data-description="Fresh organic turmeric root, known for its vibrant color and health benefits. Sourced from sustainable farms.">
+                    <img src="https://5.imimg.com/data5/SELLER/Default/2024/7/432506692/TI/NJ/FK/23197957/erode-turmeric-powder-500x500.jpeg" alt="Organic Turmeric" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Organic Turmeric</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Fresh organic turmeric root.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹110/kg</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                
+                <div class="product-card product fruits bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="Cherry"
+                     data-name="Cherry"
+                     data-price="90"
+                     data-unit="pack"
+                     data-img="https://anourishingplate.com/wp-content/uploads/2023/07/what-goes-with-cherries.jpg"
+                     data-description="Cherry – the tangy-sweet delight we waited for all year, a fruit that tasted like freedom, friendship, and everything good about being a kid.">
+                    <img src="https://images.immediate.co.uk/production/volatile/sites/30/2023/07/Cherries-02-d6ba13e.jpg?quality=90&resize=440,400" alt="Himalayan Dhoop" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Himalayan Cherry</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Cherry -sweet, simple, unforgettable.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹90/pack</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product wellness bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="joss stick"
+                     data-name="joss stick"
+                     data-price="75"
+                     data-unit="pack"
+                     data-img="https://i.etsystatic.com/24943375/r/il/85e1e2/6154439420/il_fullxfull.6154439420_8dcw.jpg"
+                     data-description="Aromatic incense sticks made with pure essential oils and herbal extracts. Creates a calming and refreshing ambiance.">
+                    <img src="https://cdn.notonthehighstreet.com/fs/fb/8a/6c69-c19b-47e7-8fe8-4cbfb589eaf2/original_handmade-fair-trade-indian-incense-stick-mixed-bundle.jpg" alt="Herbal joss stick" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Herbal joss stick</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Aromatic incense sticks.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹75/pack</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <!-- MORE WELLNESS PRODUCTS -->
+                <div class="product-card product wellness bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="ayurvedic-tea-blend"
+                     data-name="Ayurvedic Tea Blend"
+                     data-price="280"
+                     data-unit="pack"
+                     data-img="https://butterflyayurveda.com/cdn/shop/files/heart-strong-infusion_59045fa7-53cd-4059-8705-e5723fa2291c.webp?v=1707389954"
+                     data-description="A soothing blend of traditional Ayurvedic herbs for overall well-being. Promotes relaxation and digestion.">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQADPl_cxTdSrj_MzCclOhfVp3b2gTPplT8dY0S2MfC76c2O3wkb8GNwNP5bQwX-7H6adw&usqp=CAU" alt="Ayurvedic Tea Blend" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Ayurvedic Tea Blend</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Soothing blend of Ayurvedic herbs.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹280/pack</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card product wellness bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="essential-oil-blend"
+                     data-name="Essential Oil Blend"
+                     data-price="450"
+                     data-unit="bottle"
+                     data-img="https://cdn11.bigcommerce.com/s-caylvaou2m/product_images/uploaded_images/cedarwood-essential-oil.jpeg"
+                     data-description="Pure essential oil blend for aromatherapy and relaxation. Made from Himalayan botanicals.">
+                    <img src="https://www.sunumbra.com/images/cedarwood-atlas-oil.jpg" alt="Essential Oil Blend" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Essential Oil Blend</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Pure essential oil for aromatherapy.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹450/bottle</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+
+           <div class="product-card product dairy bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="farm-fresh-butter"
+                     data-name="Farm Fresh Butter"
+                     data-price="280"
+                     data-unit="500g"
+                     data-img="https://img.freepik.com/premium-photo/homemade-white-butter-makhan-makkhan-hindi-served-bowl-selective-focus_466689-34153.jpg"
+                     data-description="Creamy, unsalted butter made from the milk of free-grazing cows in the Himalayan foothills. Perfect for cooking and baking.">
+                    <img src="https://static.toiimg.com/thumb/msid-104241431,width-400,resizemode-4/104241431.jpg" alt="Farm Fresh Butter" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Farm Fresh Butter</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Creamy butter from Himalayan cows.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹280/500g</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+                <div class="product-card product vegetables bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="ladyfinger-okra"
+                     data-name="Ladyfinger / Okra"
+                     data-price="60"
+                     data-unit="kg"
+                     data-img="https://rukminim2.flixcart.com/image/850/1000/kfk0e4w0/plant-seed/a/d/k/40-bhendi-b325-paudha-original-imafvz8f6qvhhap5.jpeg?q=90&crop=false"
+                     data-description="Fresh and tender ladyfingers (okra), perfect for curries and stir-fries. Organically grown and packed with nutrients.">
+                    <img src="https://plantsguru.com/cdn/shop/files/Lady_Finger-okra.jpg?v=1743426170&width=1500" alt="Ladyfinger / Okra (Bhindi)" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Ladyfinger / Okra</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Fresh and tender for your favorite dishes.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹60/kg</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+                <div class="product-card product dairy bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="buffalo-milk"
+                     data-name="Buffalo Milk"
+                     data-price="70"
+                     data-unit="litre"
+                     data-img="https://static.toiimg.com/photo/108036977.cms"
+                     data-description="Rich and creamy buffalo milk, sourced from local Himalayan farms. Known for its higher fat content, perfect for making dairy products like paneer and curd.">
+                    <img src="https://www.gramathupaal.com/assets/img/products/1.png" alt="Buffalo Milk" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Buffalo Milk</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Rich and creamy milk from Himalayan buffaloes.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹70/litre</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+                <div class="product-card product vegetables bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="potato-himalayan"
+                     data-name="Himalayan Potato"
+                     data-price="50"
+                     data-unit="kg"
+                     data-img="https://img.freepik.com/premium-photo/potato-harvest-garden-selective-focus_73944-38212.jpg"
+                     data-description="Farm-fresh Himalayan potatoes, known for their earthy flavor and versatility. Ideal for all your culinary needs, from curries to fries.">
+                    <img src="https://img.freepik.com/free-photo/side-view-raw-potatoes-dish_141793-7235.jpg?semt=ais_hybrid&w=740&q=80" alt="Himalayan Potato" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Himalayan Potato</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Earthy and versatile potatoes from the mountains.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹50/kg</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+                <div class="product-card product vegetables bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="tomato-himalayan"
+                     data-name="Himalayan Tomato"
+                     data-price="45"
+                     data-unit="kg"
+                     data-img="https://media.istockphoto.com/id/1419141035/photo/cut-red-tomato-close-up-in-a-box.jpg?s=612x612&w=0&k=20&c=eROI2zV4l1ozwwhdcdxgfqiKfynOZ-lAyv0FDUKyGl0="
+                     data-description="Juicy and flavorful tomatoes, grown in the fertile Himalayan soil. Perfect for salads, sauces, and curries.">
+                    <img src="https://contentgrid.homedepot-static.com/hdus/en_US/DTCCOMNEW/Articles/how-to-start-tomatoes-from-seed-thumbnail.jpg" alt="Himalayan Tomato" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Himalayan Tomato</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Juicy and flavorful tomatoes from the mountains.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹45/kg</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+                <div class="product-card product vegetables bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="brinjal-himalayan"
+                     data-name="Brinjal / Eggplant"
+                     data-price="55"
+                     data-unit="kg"
+                     data-img="https://foodcare.in/cdn/shop/files/roundbrinjal_600x_6784b381-a3f3-478c-8aa8-b32e15b96b3b.webp?v=1725364971"
+                     data-description="Fresh and glossy brinjals (eggplants) from local Himalayan farms. Versatile for various cuisines, from Indian curries to Mediterranean dishes.">
+                    <img src="https://static.wixstatic.com/media/e403f6_3ee786bdbac946e29b9bf358c7faca6c~mv2.jpg/v1/fill/w_540,h_518,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/e403f6_3ee786bdbac946e29b9bf358c7faca6c~mv2.jpg" alt="Brinjal / Eggplant" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Brinjal / Eggplant</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Fresh and glossy for your culinary creations.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹55/kg</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+                <div class="product-card product vegetables bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="cauliflower-himalayan"
+                     data-name="Himalayan Cauliflower"
+                     data-price="70"
+                     data-unit="kg"
+                     data-img="https://images.unsplash.com/photo-1566842600175-97dca489844f?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8Y2F1bGlmbG93ZXJ8ZW58MHx8MHx8fDA%3D"
+                     data-description="Fresh and crisp cauliflower, grown in the cool climate of the Himalayas. Perfect for curries, stir-fries, or roasted dishes.">
+                    <img src="https://cdn.britannica.com/24/140624-050-A8237BB9/Cauliflower-plant-form-cauliflower-cabbage-flower-structures.jpg" alt="Himalayan Cauliflower" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Himalayan Cauliflower</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Fresh and crisp for your culinary delights.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹70/kg</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+             <div class="product-card product herbs bg-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-102 transition-all duration-300 overflow-hidden cursor-pointer"
+                     data-id="parsley-fresh"
+                     data-name="Parsley"
+                     data-price="30"
+                     data-unit="bunch"
+                     data-img="https://images.saymedia-content.com/.image/t_share/MTc0Mzk0MDM3MjI5NDYyODg4/all-about-herbs-parsley.jpg"
+                     data-description="Fresh, aromatic parsley, perfect for garnishing and adding a fresh flavor to your dishes. Organically grown in the Himalayan region.">
+                    <img src="https://5.imimg.com/data5/SELLER/Default/2025/5/514878416/GG/MP/FV/7651129/parsley-english-250x250.jpg" alt="Parsley" class="w-full product-card-img rounded-t-xl">
+                    <div class="p-5 text-center">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Parsley</h3>
+                        <p class="text-gray-600 text-sm mb-3 h-12 overflow-hidden">Fresh and aromatic herb for culinary use.</p>
+                        <div class="text-green-700 font-bold text-lg mb-4">₹30/bunch</div>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md transition-colors duration-300 add-to-cart-grid">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+
+    <section class="max-w-6xl mx-auto p-6">
+  <h2 class="text-xl font-semibold mb-4">New from Farmers</h2>
+  <div id="customer-products" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+</section>
+
+
+    <!-- Product Detail Section (Initially Hidden) -->
+    <section id="product-detail-section" class="hidden py-12 bg-white mx-4 mt-8 rounded-lg shadow-md">
+        <div class="container mx-auto px-4">
+            <button id="back-to-products" class="mb-6 bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold hover:bg-gray-300 transition-colors duration-300">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Products
+            </button>
+            <div class="flex flex-col md:flex-row gap-8">
+                <!-- Left Side: Product Image -->
+                <div class="md:w-1/2 flex justify-center items-center bg-gray-50 rounded-lg shadow-inner product-detail-img-container">
+                    <img id="detail-product-img" src="" alt="Product Image" class="product-detail-img">
+                </div>
+
+                <!-- Right Side: Product Details & Controls -->
+                <div class="md:w-1/2 p-4">
+                    <h1 id="detail-product-name" class="text-4xl font-bold text-gray-900 mb-4"></h1>
+                    <div class="flex items-center mb-4">
+                        <div class="text-yellow-500">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                        </div>
+                        <span class="text-gray-600 ml-2">(0 customer reviews)</span>
+                    </div>
+                    <p id="detail-product-description" class="text-gray-700 mb-6 leading-relaxed"></p>
+                    <div class="text-green-700 font-extrabold text-3xl mb-6">₹<span id="detail-product-price"></span>/<span id="detail-product-unit"></span></div>
+
+
+                    <!-- Quantity Selection -->
+                    <div class="mb-6">
+                        <label for="quantity-input" class="block text-gray-700 font-semibold mb-2">Quantity</label>
+                        <div class="flex items-center border border-gray-300 rounded-full overflow-hidden w-40">
+                            <button id="quantity-decrease" class="bg-gray-200 text-gray-700 px-4 py-2 hover:bg-gray-300 transition-colors duration-300 rounded-l-full">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <input type="number" id="quantity-input" value="1" min="1" class="w-full text-center border-x border-gray-300 py-2 focus:outline-none text-gray-800">
+                            <button id="quantity-increase" class="bg-gray-200 text-gray-700 px-4 py-2 hover:bg-gray-300 transition-colors duration-300 rounded-r-full">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <!-- Quantity options as buttons (similar to provided image) -->
+                        <div class="flex flex-wrap gap-2 mt-3" id="quantity-options-container">
+                            <button class="quantity-option bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm hover:bg-green-100 hover:text-green-700 transition-colors duration-300" data-value="100">100g</button>
+                            <button class="quantity-option bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm hover:bg-green-100 hover:text-green-700 transition-colors duration-300" data-value="250">250g</button>
+                            <button class="quantity-option bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm hover:bg-green-100 hover:text-green-700 transition-colors duration-300" data-value="500">500g</button>
+                            <button class="quantity-option bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm hover:bg-green-100 hover:text-green-700 transition-colors duration-300" data-value="1000">1000g</button>
+                        </div>
+                    </div>
+
+                    <!-- Add to Cart Button -->
+                    <button id="add-to-cart-detail" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition-transform duration-300 hover:scale-105 mb-6">
+                        ADD TO CART
+                    </button>
+
+                    <!-- Product Meta Info -->
+                    <div class="text-sm text-gray-600 mb-6">
+                        <p>SKU: N/A</p>
+                        <p>Categories: <span id="detail-product-categories">Fruits, Organic</span></p>
+                    </div>
+
+                    <!-- Social Share Icons -->
+                    <div class="flex space-x-3 mb-6">
+                        <a href="#" class="text-gray-500 hover:text-blue-600 text-xl"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-gray-500 hover:text-blue-400 text-xl"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-500 hover:text-red-600 text-xl"><i class="fab fa-pinterest"></i></a>
+                        <a href="#" class="text-gray-500 hover:text-green-600 text-xl"><i class="fab fa-whatsapp"></i></a>
+                        <a href="#" class="text-gray-500 hover:text-gray-800 text-xl"><i class="fas fa-envelope"></i></a>
+                    </div>
+
+                    <!-- Safe Checkout / Quality Assured -->
+                    <div class="border-t border-gray-200 pt-6 mt-6">
+                        <div class="bg-green-100 text-green-800 text-center py-2 rounded-md mb-4 font-semibold">
+                            Guaranteed Safe Checkout
+                        </div>
+                        <div class="flex justify-center items-center space-x-4 mb-6">
+                            <img src="https://placehold.co/60x30/ffffff/000000?text=Paytm" alt="Paytm" class="h-8">
+                            <img src="https://placehold.co/60x30/ffffff/000000?text=GPay" alt="GPay" class="h-8">
+                            <img src="https://placehold.co/60x30/ffffff/000000?text=UPI" alt="UPI" class="h-8">
+                            <img src="https://placehold.co/60x30/ffffff/000000?text=Visa" alt="Visa" class="h-8">
+                            <img src="https://placehold.co/60x30/ffffff/000000?text=Mastercard" alt="Mastercard" class="h-8">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center text-sm">
+                            <div class="p-3 bg-gray-50 rounded-md shadow-sm">
+                                <h4 class="font-bold text-gray-800">Carefully Curated</h4>
+                                <p class="text-gray-600">Sourced from trusted farms for unmatched purity and taste.</p>
+                            </div >
+                            <div class="p-3 bg-gray-50 rounded-md shadow-sm">
+                                <h4 class="font-bold text-gray-800">Quality Assured</h4>
+                                <p class="text-gray-600">100% Natural, No Additives, Just Real, Flavorful Goodness.</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-md shadow-sm">
+                                <h4 class="font-bold text-gray-800">Customer First</h4>
+                                <p class="text-gray-600">Responsive Support & Transparent Service. Always.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Shopping Cart Section (Initially Hidden) -->
+    <section id="cart-section" class="hidden py-12 bg-white mx-4 mt-8 rounded-lg shadow-md">
+        <div class="container mx-auto px-4">
+            <button id="back-to-shop" class="mb-6 bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold hover:bg-gray-300 transition-colors duration-300">
+                <i class="fas fa-arrow-left mr-2"></i> Continue Shopping
+            </button>
+            <h2 class="text-3xl font-bold text-center text-green-700 mb-8">Your Shopping Cart</h2>
+
+            <div id="cart-items-container" class="space-y-6 mb-8">
+                <!-- Cart items will be rendered here by JavaScript -->
+                <div class="text-center text-gray-500" id="empty-cart-message">Your cart is empty.</div>
+            </div>
+
+            <div class="flex justify-end items-center border-t border-gray-200 pt-6">
+                <span class="text-xl font-bold text-gray-900 mr-4">Total: ₹<span id="cart-total">0.00</span></span>
+                <button id="checkout-button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition-transform duration-300 hover:scale-105">
+                    Proceed to Checkout
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-12 bg-green-100 mx-4 mt-8 rounded-lg shadow-md">
+        <div class="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div class="p-6 bg-white rounded-xl shadow-md">
+                <i class="fas fa-leaf text-5xl text-green-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">100% Natural</h3>
+                <p class="text-gray-600">Pure, organic products straight from nature's bounty.</p>
+            </div>
+            <div class="p-6 bg-white rounded-xl shadow-md">
+                <i class="fas fa-truck text-5xl text-green-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Fast & Reliable Shipping</h3>
+                <p class="text-gray-600">Delivered quickly and safely to your doorstep across India.</p>
+            </div>
+            <div class="p-6 bg-white rounded-xl shadow-md">
+                <i class="fas fa-hands-helping text-5xl text-green-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">24/7 Support</h3>
+                <p class="text-gray-600">Dedicated customer support for all your queries.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="py-12 bg-green-700 text-white mx-4 mt-8 rounded-lg shadow-md">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold mb-4">Stay Fresh with Our Newsletter!</h2>
+            <p class="text-lg mb-6">Sign up to get exclusive offers and updates on new arrivals.</p>
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                <input type="email" placeholder="Enter your email" class="p-3 rounded-full w-full sm:w-80 text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-300">
+                <button class="bg-white text-green-700 font-bold py-3 px-8 rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-300">Subscribe</button>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Notification Message Box -->
+    <div id="notification-message" class="notification"></div>
+
+    <script>
+        async function loadNewProducts() {
+  try {
+    const res = await fetch('get_products.php', { cache: 'no-store' });
+    const json = await res.json();
+
+    if (!json.success) {
+      console.error('API error:', json.message || json.error);
+      return;
+    }
+
+    const list = document.getElementById('customer-products');
+    list.innerHTML = '';
+
+    json.data.forEach(p => {
+      const card = `
+        <div class="bg-white rounded-xl shadow p-4">
+          <img src="${p.image}" alt="${p.name}" class="h-40 w-full object-cover rounded mb-3"
+               onerror="this.src='placeholder.png'">
+          <h3 class="font-semibold text-gray-800">${p.name}</h3>
+          <p class="text-sm text-gray-600 line-clamp-2">${p.description || ''}</p>
+          <div class="mt-2 font-bold text-green-700">₹${p.price}/${p.unit}</div>
+          <button class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded">
+            Add to cart
+          </button>
+        </div>`;
+      list.insertAdjacentHTML('beforeend', card);
+    });
+  } catch (e) {
+    console.error('Fetch failed:', e);
+  }
+}
+
+// Load on page ready
+document.addEventListener('DOMContentLoaded', loadNewProducts);
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const productCards = document.querySelectorAll('.product-card');
+            const productGridSection = document.getElementById('product-grid-section');
+            const productDetailSection = document.getElementById('product-detail-section');
+            const heroSection = document.getElementById('hero-section');
+            const cartSection = document.getElementById('cart-section'); // New cart section
+
+            const detailProductName = document.getElementById('detail-product-name');
+            const detailProductDescription = document.getElementById('detail-product-description');
+            const detailProductPrice = document.getElementById('detail-product-price');
+            const detailProductUnit = document.getElementById('detail-product-unit');
+            const detailProductImg = document.getElementById('detail-product-img');
+            const quantityInput = document.getElementById('quantity-input');
+            const quantityDecrease = document.getElementById('quantity-decrease');
+            const quantityIncrease = document.getElementById('quantity-increase');
+            const quantityOptionsContainer = document.getElementById('quantity-options-container');
+            const backToProductsBtn = document.getElementById('back-to-products');
+            const addToCartGridButtons = document.querySelectorAll('.add-to-cart-grid');
+            const addToCartDetailButton = document.getElementById('add-to-cart-detail');
+            const cartCountSpan = document.getElementById('cart-count');
+            const notificationMessage = document.getElementById('notification-message');
+            const cartIconLink = document.getElementById('cart-icon-link'); // Cart icon link in header
+            const backToShopBtn = document.getElementById('back-to-shop'); // Back button in cart
+            const cartItemsContainer = document.getElementById('cart-items-container'); // Container for cart items
+            const emptyCartMessage = document.getElementById('empty-cart-message'); // Message for empty cart
+            const cartTotalSpan = document.getElementById('cart-total'); // Cart total display
+            const checkoutButton = document.getElementById('checkout-button'); // Checkout button
+
+            let cart = []; // Array to store cart items
+
+            // Function to update the cart count display
+            function updateCartCount() {
+                cartCountSpan.textContent = cart.reduce((total, item) => total + item.quantity, 0);
+            }
+
+            // Function to show a notification message
+            function showNotification(message) {
+                notificationMessage.textContent = message;
+                notificationMessage.classList.add('show');
+                setTimeout(() => {
+                    notificationMessage.classList.remove('show');
+                }, 3000); // Hide after 3 seconds
+            }
+
+            // Function to add a product to the cart
+            function addProductToCart(productId, productName, price, unit, quantity, img) {
+                const existingItemIndex = cart.findIndex(item => item.id === productId);
+
+                if (existingItemIndex > -1) {
+                    cart[existingItemIndex].quantity += quantity;
+                    showNotification(`${quantity} ${productName} added to cart! Total: ${cart[existingItemIndex].quantity} ${unit}`);
+                } else {
+                    cart.push({ id: productId, name: productName, price: price, unit: unit, quantity: quantity, img: img });
+                    showNotification(`${quantity} ${productName} added to cart!`);
+                }
+                updateCartCount();
+                console.log('Current Cart:', cart);
+            }
+
+            // Function to render cart items in the cart section
+            function renderCartItems() {
+                cartItemsContainer.innerHTML = ''; // Clear existing items
+
+                if (cart.length === 0) {
+                    emptyCartMessage.style.display = 'block';
+                    cartTotalSpan.textContent = '0.00';
+                    checkoutButton.disabled = true; // Disable checkout if cart is empty
+                    checkoutButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    return;
+                } else {
+                    emptyCartMessage.style.display = 'none';
+                    checkoutButton.disabled = false;
+                    checkoutButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+
+                let total = 0;
+
+                cart.forEach(item => {
+                    const itemTotal = item.price * item.quantity;
+                    total += itemTotal;
+
+                    const cartItemDiv = document.createElement('div');
+                    cartItemDiv.classList.add('flex', 'items-center', 'justify-between', 'bg-gray-50', 'p-4', 'rounded-lg', 'shadow-sm');
+                    cartItemDiv.innerHTML = `
+                        <div class="flex items-center space-x-4">
+                            <img src="${item.img}" alt="${item.name}" class="w-20 h-20 object-cover rounded-md">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">${item.name}</h3>
+                                <p class="text-gray-600">₹${item.price.toFixed(2)} / ${item.unit}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <button class="cart-quantity-decrease bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300 transition-colors duration-300" data-id="${item.id}">-</button>
+                            <span class="text-lg font-medium text-gray-800">${item.quantity}</span>
+                            <button class="cart-quantity-increase bg-gray-200 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-300 transition-colors duration-300" data-id="${item.id}">+</button>
+                            <button class="cart-item-remove text-red-500 hover:text-red-700 transition-colors duration-300 ml-4" data-id="${item.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="text-lg font-bold text-green-700">₹${itemTotal.toFixed(2)}</div>
+                    `;
+                    cartItemsContainer.appendChild(cartItemDiv);
+                });
+
+                cartTotalSpan.textContent = total.toFixed(2);
+
+                // Add event listeners for new quantity buttons in cart
+                document.querySelectorAll('.cart-quantity-decrease').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const productId = this.dataset.id;
+                        updateCartItemQuantity(productId, -1);
+                    });
+                });
+
+                document.querySelectorAll('.cart-quantity-increase').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const productId = this.dataset.id;
+                        updateCartItemQuantity(productId, 1);
+                    });
+                });
+
+                document.querySelectorAll('.cart-item-remove').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const productId = this.dataset.id;
+                        removeCartItem(productId);
+                    });
+                });
+            }
+
+            // Function to update quantity of an item in the cart
+            function updateCartItemQuantity(productId, change) {
+                const itemIndex = cart.findIndex(item => item.id === productId);
+                if (itemIndex > -1) {
+                    cart[itemIndex].quantity += change;
+                    if (cart[itemIndex].quantity <= 0) {
+                        cart.splice(itemIndex, 1); // Remove item if quantity is 0 or less
+                    }
+                    renderCartItems(); // Re-render the cart to reflect changes
+                    updateCartCount();
+                }
+            }
+
+            // Function to remove an item from the cart
+            function removeCartItem(productId) {
+                const itemIndex = cart.findIndex(item => item.id === productId);
+                if (itemIndex > -1) {
+                    cart.splice(itemIndex, 1);
+                    showNotification('Item removed from cart.');
+                    renderCartItems();
+                    updateCartCount();
+                }
+            }
+
+            // Function to show product grid and hide other sections
+            function showProductGrid() {
+                productGridSection.classList.remove('hidden');
+                heroSection.classList.remove('hidden');
+                productDetailSection.classList.add('hidden');
+                cartSection.classList.add('hidden'); // Hide cart section
+            }
+
+            // Function to show product detail and hide others
+            function showProductDetail() {
+                productGridSection.classList.add('hidden');
+                heroSection.classList.add('hidden');
+                productDetailSection.classList.remove('hidden');
+                cartSection.classList.add('hidden'); // Hide cart section
+            }
+
+            // Function to show cart section and hide others
+            function showCart() {
+                productGridSection.classList.add('hidden');
+                heroSection.classList.add('hidden');
+                productDetailSection.classList.add('hidden');
+                cartSection.classList.remove('hidden');
+                renderCartItems(); // Render cart items when cart is shown
+            }
+
+            // Event listener for filter buttons
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    filterButtons.forEach(btn => {
+                        btn.classList.remove('bg-green-600', 'text-white');
+                        btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-green-100', 'hover:text-green-700');
+                    });
+                    this.classList.add('bg-green-600', 'text-white');
+                    this.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-green-100', 'hover:text-green-700');
+
+                    const filter = this.dataset.filter;
+                    productCards.forEach(card => {
+                        if (filter === 'all' || card.classList.contains(filter)) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            // Event listener for product cards to show detail view
+            productCards.forEach(card => {
+                card.addEventListener('click', function(event) {
+                    // If the click target is an "Add to Cart" button within the grid card, handle it separately
+                    if (event.target.classList.contains('add-to-cart-grid')) {
+                        const id = this.dataset.id;
+                        const name = this.dataset.name;
+                        const price = parseFloat(this.dataset.price);
+                        const unit = this.dataset.unit;
+                        const img = this.dataset.img;
+                        addProductToCart(id, name, price, unit, 1, img); // Add 1 quantity from grid view
+                        return; // Prevent showing detail page
+                    }
+
+                    const id = this.dataset.id;
+                    const name = this.dataset.name;
+                    const price = parseFloat(this.dataset.price);
+                    const unit = this.dataset.unit;
+                    const img = this.dataset.img;
+                    const description = this.dataset.description;
+
+                    detailProductName.textContent = name;
+                    detailProductDescription.textContent = description;
+                    detailProductPrice.textContent = price;
+                    detailProductUnit.textContent = unit;
+                    detailProductImg.src = img;
+                    quantityInput.value = 1; // Reset quantity to 1
+                    quantityInput.dataset.productId = id; // Store product ID for detail page add to cart
+
+                    // Dynamically show/hide and update quantity options based on unit
+                    quantityOptionsContainer.querySelectorAll('.quantity-option').forEach(option => {
+                        if (unit === 'kg' || unit === 'bunch') {
+                            option.textContent = option.dataset.value + 'g';
+                            option.style.display = 'inline-block'; // Show if applicable
+                        } else {
+                            option.style.display = 'none'; // Hide if not applicable
+                        }
+                    });
+
+                    showProductDetail();
+                });
+            });
+
+            // Event listener for back button in product detail
+            backToProductsBtn.addEventListener('click', showProductGrid);
+
+            // Quantity controls (increase/decrease) in product detail
+            quantityDecrease.addEventListener('click', function() {
+                let currentQuantity = parseInt(quantityInput.value);
+                if (currentQuantity > 1) {
+                    quantityInput.value = currentQuantity - 1;
+                }
+            });
+
+            quantityIncrease.addEventListener('click', function() {
+                let currentQuantity = parseInt(quantityInput.value);
+                quantityInput.value = currentQuantity + 1;
+            });
+
+            // Quantity options buttons (100g, 250g, etc.) in product detail
+            quantityOptionsContainer.addEventListener('click', function(event) {
+                if (event.target.classList.contains('quantity-option')) {
+                    const selectedOption = event.target;
+                    // Remove active class from all options
+                    quantityOptionsContainer.querySelectorAll('.quantity-option').forEach(btn => {
+                        btn.classList.remove('bg-green-600', 'text-white');
+                        btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-green-100', 'hover:text-green-700');
+                    });
+                    // Add active class to the clicked option
+                    selectedOption.classList.add('bg-green-600', 'text-white');
+                    selectedOption.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-green-100', 'hover:text-green-700');
+
+                    const unit = detailProductUnit.textContent;
+                    let quantityInGrams = parseInt(selectedOption.dataset.value);
+
+                    if (unit === 'kg' || unit === 'bunch') {
+                        quantityInput.value = quantityInGrams / 1000; // Convert grams to units (e.g., 0.1 for 100g)
+                    } else {
+                        quantityInput.value = quantityInGrams; // For other units, just use the value directly
+                    }
+                }
+            });
+
+            // Event listener for "ADD TO CART" button on the detail page
+            addToCartDetailButton.addEventListener('click', function() {
+                const id = quantityInput.dataset.productId; // Get product ID
+                const name = detailProductName.textContent;
+                const price = parseFloat(detailProductPrice.textContent);
+                const unit = detailProductUnit.textContent;
+                const quantity = parseFloat(quantityInput.value);
+                const img = detailProductImg.src;
+                addProductToCart(id, name, price, unit, quantity, img);
+            });
+
+            // Event listener for cart icon in header
+            cartIconLink.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default link behavior
+                showCart();
+            });
+
+            // Event listener for "Continue Shopping" button in cart
+            backToShopBtn.addEventListener('click', showProductGrid);
+
+            // Event listener for checkout button
+            checkoutButton.addEventListener('click', function() {
+    if (cart.length > 0) {
+        showNotification('Proceeding to checkout! (This is a placeholder action)');
+        openHelloModal(); // ✅ Popup bhi khulega
+    } else {
+        showNotification('Your cart is empty. Please add items before checking out.');
+    }
+});
+
+
+            // Initialize cart count on page load
+                        updateCartCount();
+                    });
+            function openHelloModal() {
+                document.getElementById('helloModal').classList.remove('hidden');
+            }
+            function closeHelloModal() {
+                document.getElementById('helloModal').classList.add('hidden');
+            }
+
+
+
+
+
+
+
+            ////proceed to checkout
+                function openHelloModal() {
+    document.getElementById('helloModal').classList.remove('hidden');
+}
+function closeHelloModal() {
+    document.getElementById('helloModal').classList.add('hidden');
+}
+        function processPayment() {
+    const selected = document.querySelector('input[name="payment"]:checked').value;
+
+    if (selected === "upi") {
+        // ✅ QR Section show karo
+        document.getElementById("qrSection").classList.remove("hidden");
+
+        // ✅ Pay Now button hide karo
+        document.getElementById("payNowBtn").classList.add("hidden");
+
+        // ✅ Submit Screenshot button show karo
+        document.getElementById("submitScreenshotBtn").classList.remove("hidden");
+
+    } else {
+        // ✅ Normal methods
+        alert("Your order has been placed, you have chosen: " + selected + " as your payment mode");
+        closeHelloModal();
+    }
+}
+
+// ✅ Screenshot submit karne par action
+function submitScreenshot() {
+    alert("📤 Screenshot submitted successfully! Thank you for your payment.");
+    closeHelloModal();
+}
+
+
+
+    </script>
+    
+</body>
+</html>
+
+
+
+<!-- Payment Options Popup Modal -->
+<div id="helloModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
+    <h2 class="text-xl font-bold mb-4">💳 Select Payment Method</h2>
+    
+    <div class="space-y-3 text-left">
+      <label class="flex items-center">
+        <input type="radio" name="payment" value="cod" checked class="mr-2">
+        Cash on Delivery
+      </label>
+      <label class="flex items-center">
+        <input type="radio" name="payment" value="upi" class="mr-2">
+        UPI / Wallet
+      </label>
+      <label class="flex items-center">
+        <input type="radio" name="payment" value="card" class="mr-2">
+        Debit / Credit Card
+      </label>
+    </div>
+
+    <!-- ✅ Pay Now button (default visible) -->
+    <button id="payNowBtn" onclick="processPayment()" 
+      class="mt-5 px-4 py-2 bg-green-600 text-white rounded w-full">
+      Pay Now
+    </button>
+
+    <!-- ✅ Submit Screenshot button (hidden by default) -->
+    <button id="submitScreenshotBtn" onclick="submitScreenshot()" 
+      class="hidden mt-5 px-4 py-2 bg-blue-600 text-white rounded w-full">
+      📤 Submit Screenshot
+    </button>
+
+    <!-- ✅ QR Section -->
+    <div id="qrSection" class="hidden mt-4 text-center">
+      <h3 class="text-lg font-semibold mb-2">📲 Scan this QR to Pay</h3>
+      <img src="./uploads/qr.png" alt="UPI QR Code" class="mx-auto border rounded p-2 w-48">
+      <p class="mt-2 text-sm text-gray-600">Use any UPI app to scan & pay</p>
+    </div>
+  </div>
+</div>
+
+
+
+
+<?php include 'components/footer.php'; ?> 
